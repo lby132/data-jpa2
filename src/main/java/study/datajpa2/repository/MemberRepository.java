@@ -3,6 +3,7 @@ package study.datajpa2.repository;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Slice;
+import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
@@ -55,5 +56,24 @@ public interface MemberRepository extends JpaRepository<Member, Long> {
     @Modifying(clearAutomatically = true)
     @Query("update Member m set m.age = m.age + 1 where m.age >= :age")
     int bulkAgePlus(@Param("age") int age);
+
+    @Query("select m from Member m left join fetch m.team")
+    List<Member> findMemberFetchJoin();
+
+    // 페치조인 다른 방법 1
+    @Override //JpaRepository에 있는 findAll()을 오버라이딩함
+    @EntityGraph(attributePaths = {"team"}) // jpql로 select m from Member m left join fetch m.team 이렇게 페치조인을 걸어주기
+                                            // 귀찮을때 써도되는 방법 내부적으로는 fetch join을 쓴다고 함.
+    List<Member> findAll();
+
+    // 페치조인 다른 방법 2 jpql이랑 같이 쓰고 싶을때
+    @EntityGraph(attributePaths = {"team"})
+    @Query("select m from Member m")
+    List<Member> findMemberEntityGraph();
+
+    // 페치조인 다른 방법 3 메소드이름이랑 같이 쓰고 싶을때
+    //@EntityGraph("Member.all")  Member에서 설정한 NamedEntityGraph에 설정한 이름을 넣어주면 된다. 이 방법은 잘 안씀.
+    @EntityGraph(attributePaths = {"team"}) // 간단할때 사용. 아니면 jpql 로 페치조인 사용.
+    List<Member> findEntityGraphByUsername(@Param("username") String username);
 }
 

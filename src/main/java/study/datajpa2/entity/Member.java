@@ -12,6 +12,8 @@ import javax.persistence.*;
         name = "Member.findByUsername",
         query = "select m from Member m where m.username = :username"
 )
+//@NamedEntityGraph는 jpa표준스펙. Member.all = Member에 연관된 애들을 다 가져온다.
+@NamedEntityGraph(name = "Member.all", attributeNodes = @NamedAttributeNode("team"))
 public class Member {
 
     @Id

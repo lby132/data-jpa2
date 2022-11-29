@@ -187,7 +187,7 @@ class MemberRepositoryTest {
         //responseBody로 내보내기 위해 Page는 map()이라는 메소드를 제공한다.
         final Page<MemberDto> toMap = page.map(m -> new MemberDto(m.getId(), m.getUsername(), null));
 
-        //then 
+        //then
         final List<Member> content = page.getContent();
         final long totalElements = page.getTotalElements();
         System.out.println("totalElements = " + totalElements);
@@ -222,5 +222,33 @@ class MemberRepositoryTest {
         final Member member = result.get(0);
 
         assertThat(resultCount).isEqualTo(3);
+    }
+
+    @Test
+    void findMemberLazy() {
+        final Team teamA = new Team("teamA");
+        final Team teamB = new Team("teamB");
+        teamRepository.save(teamA);
+        teamRepository.save(teamB);
+        final Member member1 = new Member("member1", 10, teamA);
+        final Member member2 = new Member("member1", 10, teamA);
+        memberRepository.save(member1);
+        memberRepository.save(member2);
+
+        em.flush();
+        em.clear();
+
+        //Member만 가져오는 쿼리가 나감
+        //final List<Member> members = memberRepository.findAll();
+        //final List<Member> members = memberRepository.findMemberFetchJoin();
+        final List<Member> members = memberRepository.findEntityGraphByUsername("member1");
+
+        for (Member member : members) {
+            //Member에 있는 데이터 출력
+            System.out.println("member = " + member.getUsername());
+            System.out.println("member.getTeam = " + member.getTeam().getClass());
+            //member.getTeam()여기까지는 쿼리가 안나감 프록시로 가짜 객체를 가져와서 team Select쿼리 나감 getName()을 호출했을때 진짜 DB에서 조회해서 가져옴
+            System.out.println("member.team.name = " + member.getTeam().getName());
+        }
     }
 }
