@@ -14,7 +14,7 @@ import javax.persistence.*;
 )
 //@NamedEntityGraph는 jpa표준스펙. Member.all = Member에 연관된 애들을 다 가져온다.
 @NamedEntityGraph(name = "Member.all", attributeNodes = @NamedAttributeNode("team"))
-public class Member {
+public class Member extends BaseEntity {
 
     @Id
     @GeneratedValue

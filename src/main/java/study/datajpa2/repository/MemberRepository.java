@@ -3,19 +3,18 @@ package study.datajpa2.repository;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Slice;
-import org.springframework.data.jpa.repository.EntityGraph;
-import org.springframework.data.jpa.repository.JpaRepository;
-import org.springframework.data.jpa.repository.Modifying;
-import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.jpa.repository.*;
 import org.springframework.data.repository.query.Param;
 import study.datajpa2.dto.MemberDto;
 import study.datajpa2.entity.Member;
 
+import javax.persistence.LockModeType;
+import javax.persistence.QueryHint;
 import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
 
-public interface MemberRepository extends JpaRepository<Member, Long> {
+public interface MemberRepository extends JpaRepository<Member, Long>, MemberRepositoryCustom {
 
     List<Member> findByUsernameAndAgeGreaterThan(String username, int age);
 
@@ -28,7 +27,7 @@ public interface MemberRepository extends JpaRepository<Member, Long> {
     @Query("select m.username from Member m")
     List<String> findUsernameList();
 
-    @Query("select new study.datajpa.dto.MemberDto(m.id, m.username, t.name) from Member m join m.team t")
+    @Query("select new study.datajpa2.dto.MemberDto(m.id, m.username, t.name) from Member m join m.team t")
     List<MemberDto> findMemberDto();
 
     @Query("select m from Member m where m.username in :names")
@@ -62,8 +61,9 @@ public interface MemberRepository extends JpaRepository<Member, Long> {
 
     // 페치조인 다른 방법 1
     @Override //JpaRepository에 있는 findAll()을 오버라이딩함
-    @EntityGraph(attributePaths = {"team"}) // jpql로 select m from Member m left join fetch m.team 이렇게 페치조인을 걸어주기
-                                            // 귀찮을때 써도되는 방법 내부적으로는 fetch join을 쓴다고 함.
+    // jpql로 select m from Member m left join fetch m.team 이렇게 페치조인을
+    // 걸어주기 귀찮을때 써도되는 방법 내부적으로는 fetch join을 쓴다고 함.
+    @EntityGraph(attributePaths = {"team"})
     List<Member> findAll();
 
     // 페치조인 다른 방법 2 jpql이랑 같이 쓰고 싶을때
@@ -75,5 +75,12 @@ public interface MemberRepository extends JpaRepository<Member, Long> {
     //@EntityGraph("Member.all")  Member에서 설정한 NamedEntityGraph에 설정한 이름을 넣어주면 된다. 이 방법은 잘 안씀.
     @EntityGraph(attributePaths = {"team"}) // 간단할때 사용. 아니면 jpql 로 페치조인 사용.
     List<Member> findEntityGraphByUsername(@Param("username") String username);
+
+    @QueryHints(value = @QueryHint(name = "org.hibernate.readOnly", value = "true"))
+    Member findReadOnlyByUsername(String username);
+
+    //@Lock은 이게 걸려있는 애가 실행되면 다른 곳에서는 손대지 못하게 하는 어노테이션. 옵션마다 기능이 다르다.
+    @Lock(LockModeType.PESSIMISTIC_WRITE)
+    List<Member> findLockByUsername(String username);
 }
 
