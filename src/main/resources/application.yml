@@ -19,6 +19,7 @@ spring:
       pageable:
         default-page-size: 10
         max-page-size: 2000
+        one-indexed-parameters: true  # 페이징처리가 원래 0부터인데 이옵션을 true로 주면 1부터 시작함.
 logging:
   level:
     org.hibernate.SQL: debug  # 시스템아웃이 아닌 로그로 찍힌걸 보여주므로 이거 사용.
